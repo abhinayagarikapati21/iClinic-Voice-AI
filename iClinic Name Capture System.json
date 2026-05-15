@@ -1,0 +1,494 @@
+{
+  "agent_id": "",
+  "channel": "voice",
+  "last_modification_timestamp": 1778843663095,
+  "agent_name": "iClinic Name Capture System",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 0,
+    "conversation_flow_id": "conversation_flow_fadd4c50d9a1"
+  },
+  "language": "en-US",
+  "data_storage_setting": "everything",
+  "opt_in_signed_url": false,
+  "version": 0,
+  "assigned_tags": [],
+  "is_published": true,
+  "version_title": "",
+  "post_call_analysis_model": "gpt-4.1",
+  "pii_config": {
+    "mode": "post_call",
+    "categories": []
+  },
+  "handbook_config": {
+    "default_personality": true,
+    "speech_normalization": false,
+    "ai_disclosure": true
+  },
+  "voice_id": "retell-Cimo",
+  "max_call_duration_ms": 3600000,
+  "interruption_sensitivity": 0.55,
+  "responsiveness": 0.35,
+  "enable_dynamic_responsiveness": true,
+  "normalize_for_speech": false,
+  "allow_user_dtmf": true,
+  "allow_dtmf_interruption": false,
+  "user_dtmf_options": {},
+  "conversationFlow": {
+    "conversation_flow_id": "conversation_flow_fadd4c50d9a1",
+    "version": 0,
+    "global_prompt": "You are a voice intake agent for iClinic. Follow the conversation flow nodes exactly. Only speak the static text shown in each node. Never add extra words. Never say \"nice to meet you\", \"great\", \"perfect\", or \"next step\". Do not make routing decisions yourself. Do not end the call early. When the caller spells a name with special characters:\n- If the caller says \"apostrophe\" while spelling, you MUST write the name with an apostrophe (') NOT the word \"apostrophe\".\n  Example: \"O apostrophe B R I E N\" → Write as \"O'Brien\"\n- If the caller says \"hyphen\" or \"dash\" while spelling, you MUST write the name with a hyphen (-).\n  Example: \"G A R C I A hyphen R A M I R E Z\" → Write as \"Garcia-Ramirez\"\nNEVER include the words \"apostrophe\", \"hyphen\", or \"dash\" in the captured name. These are instructions, not part of the name.\nWhen confirming the name back to the caller, speak it naturally:\n- \"O'Brien\" (not \"O apostrophe brien\")\n- \"Garcia-Ramirez\" (not \"Garcia hyphen Ramirez\")\nWhen a user spells their name letter by letter:\n1. Collect all the letters they say\n2. Combine them into a single word\n3. Store the combined word as the name\n4. When confirming, say the combined word naturally, NOT the individual letters\nExample:\n- User spells: \"O L U F U N M I\"\n- You store: \"Olufunmi\"\n- You say: \"Did you say Olufunmi?\"\nNever repeat back individual letters unless the user asks you to.",
+    "nodes": [
+      {
+        "name": "End Call",
+        "id": "end-call-node-1778680728638",
+        "type": "end",
+        "display_position": {
+          "x": 3966,
+          "y": 678
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Politely end the call"
+        }
+      },
+      {
+        "name": "Ask First Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778682363308",
+            "id": "edge-1778682269530-kg40lucev",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller has responded and provided their first name."
+            }
+          }
+        ],
+        "id": "node-1778682269530",
+        "type": "conversation",
+        "display_position": {
+          "x": 30,
+          "y": 558
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Hello, thank you for calling.\nPlease tell me your first  name."
+        }
+      },
+      {
+        "variables": [
+          {
+            "name": "first_name",
+            "type": "string",
+            "description": "Extract only the caller's first name from their response. Do not include last names or titles.\n\nExamples of correct extraction:\n- \"My name is John\" → John\n- \"It's Abhinaya\" → Abhinaya\n- \"Saoirse\" → Saoirse\n- \"O'Brien\" (as first name) → O'Brien — preserve apostrophe\n\nCapitalize the first letter. If unclear or empty, do not extract."
+          }
+        ],
+        "else_edge": {
+          "destination_node_id": "node-1778682269530",
+          "id": "node-1778682363308-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Extract first Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778835754243",
+            "id": "edge-1778682363308-rwt1vfmpz",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The first_name variable has been successfully extracted and is not empty."
+            }
+          }
+        ],
+        "id": "node-1778682363308",
+        "type": "extract_dynamic_variables",
+        "display_position": {
+          "x": 582,
+          "y": 486
+        }
+      },
+      {
+        "name": "CONFIRMATION",
+        "edges": [
+          {
+            "destination_node_id": "end-call-node-1778680728638",
+            "id": "edge-1778684576344-lcpjexalq",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Always transition immediately after the confirmation message has been delivered."
+            }
+          }
+        ],
+        "id": "node-1778684576344",
+        "type": "conversation",
+        "display_position": {
+          "x": 3486,
+          "y": 462
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Thank you. Your name has been confirmed."
+        }
+      },
+      {
+        "name": "Confirm first Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778686180212",
+            "id": "edge-1778764285988-n19xigrgw",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller clearly confirms the first name by saying:\nyes,\ncorrect,\nthat's right,\nright,\nyeah,\nyep.\n"
+            }
+          },
+          {
+            "destination_node_id": "node-1778686228403",
+            "id": "edge-1778764317221-cqrs6936o",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller rejects the first name by saying:\nno,\nwrong,\nincorrect,\nnot really,\nyou heard it wrong.\n"
+            }
+          }
+        ],
+        "id": "node-1778685990274",
+        "type": "conversation",
+        "display_position": {
+          "x": 1398,
+          "y": 414
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "I heard {{first_name}}.\nIs that correct?"
+        }
+      },
+      {
+        "name": "Ask last Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778686376433",
+            "id": "edge-1778686180212-63323k1o6",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller has responded and provided their last name."
+            }
+          }
+        ],
+        "id": "node-1778686180212",
+        "type": "conversation",
+        "display_position": {
+          "x": 1830,
+          "y": 510
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "Please tell me your last name."
+        }
+      },
+      {
+        "name": "Spell First Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778765098310",
+            "id": "edge-1778686228403-82sj91wl1",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller has finished spelling out their first name letter by letter."
+            }
+          }
+        ],
+        "id": "node-1778686228403",
+        "type": "conversation",
+        "display_position": {
+          "x": 1422,
+          "y": 1038
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "I’m sorry about that.\nPlease spell your first name slowly, one letter at a time."
+        }
+      },
+      {
+        "variables": [
+          {
+            "name": "last_name",
+            "type": "string",
+            "description": "Extract only the caller's last name. Do not include first names or titles.\n\nExamples of correct extraction:\n- \"My last name is Williams\" → Williams\n- \"Garikapati\" → Garikapati\n- \"Garcia-Ramirez\" → Garcia-Ramirez — preserve hyphen\n- \"O'Brien\" → O'Brien — preserve apostrophe\n- \"McDonald\" → McDonald — preserve capital D\n- \"McCarthy\" → McCarthy — preserve capital C\n\nIf unclear or empty, do not extract."
+          }
+        ],
+        "else_edge": {
+          "destination_node_id": "node-1778686180212",
+          "id": "node-1778686376433-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Extract last Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778835833164",
+            "id": "edge-1778766283787-ja97tyb8p",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The last_name variable has been successfully extracted and is not empty."
+            }
+          }
+        ],
+        "id": "node-1778686376433",
+        "type": "extract_dynamic_variables",
+        "display_position": {
+          "x": 2238,
+          "y": 510
+        }
+      },
+      {
+        "name": "Confirm last Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778684576344",
+            "id": "edge-1778689073901-rzzgawoiw",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller clearly confirms the last name by saying:\nyes,\ncorrect,\nthat's right,\nright,\nyeah,\nyep."
+            }
+          },
+          {
+            "destination_node_id": "node-1778689240971",
+            "id": "edge-1778689171465-sdxv0zsco",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller rejects the first name by saying:\nno,\nwrong,\nincorrect,\nnot really,\nyou heard it wrong.\n"
+            }
+          }
+        ],
+        "id": "node-1778689073901",
+        "type": "conversation",
+        "display_position": {
+          "x": 3102,
+          "y": 462
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "I heard {{last_name}}.\nIs that correct?"
+        }
+      },
+      {
+        "name": "Spell Last Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778766425929",
+            "id": "edge-1778689240971-cv9d340nt",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The caller has finished spelling out their last name letter by letter."
+            }
+          }
+        ],
+        "id": "node-1778689240971",
+        "type": "conversation",
+        "display_position": {
+          "x": 2482.431610981768,
+          "y": 966.1051916332929
+        },
+        "instruction": {
+          "type": "static_text",
+          "text": "I’m sorry about that.\nPlease spell your last name slowly."
+        }
+      },
+      {
+        "variables": [
+          {
+            "name": "first_name",
+            "type": "string",
+            "description": "The caller is spelling their first name letter by letter. You MUST combine the individual letters into a complete name.\nExamples:\n- Letters: \"O L U F U N M I\" → Name: \"Olufunmi\"\n- Letters: \"S A O I R S E\" → Name: \"Saoirse\"\n- Letters: \"R O B E R T\" → Name: \"Robert\"\n- Letters: \"A B H I N A Y A\" → Name: \"Abhinaya\"\n- Letters: \"O apostrophe B R I E N\" → Name: \"O'Brien\"\nDo NOT repeat the letters back. Store the combined name in the variable."
+          }
+        ],
+        "else_edge": {
+          "destination_node_id": "node-1778686228403",
+          "id": "node-1778765098310-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Extract Spelled First Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778685990274",
+            "id": "edge-1778765098310-3eegbj77g",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The spelled letters have been successfully combined into a first name and stored in first_name."
+            }
+          }
+        ],
+        "id": "node-1778765098310",
+        "type": "extract_dynamic_variables",
+        "display_position": {
+          "x": 1830,
+          "y": 1014
+        }
+      },
+      {
+        "variables": [
+          {
+            "name": "last_name",
+            "type": "string",
+            "description": "The caller is spelling their last name letter by letter. Combine the letters into a complete surname.\n\nSpelling examples:\n- G A R I K A P A T I → Garikapati\n- W I L L I A M S → Williams\n- M C C A R T H Y → McCarthy\n- M C D O N A L D → McDonald\n\nSpecial characters:\n- If caller says \"apostrophe\" between letters → insert '\n  Example: O apostrophe B R I E N → O'Brien\n- If caller says \"hyphen\" or \"dash\" between letters → insert -\n  Example: G A R C I A hyphen R A M I R E Z → Garcia-Ramirez\n- Capitalize first letter and any letter after a hyphen or apostrophe."
+          }
+        ],
+        "else_edge": {
+          "destination_node_id": "node-1778689240971",
+          "id": "node-1778766425929-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Extract Spelled Last Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778689073901",
+            "id": "edge-1778766425929-g2yd8r1ul",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "The spelled letters have been successfully combined into a last name and stored in last_name."
+            }
+          }
+        ],
+        "id": "node-1778766425929",
+        "type": "extract_dynamic_variables",
+        "display_position": {
+          "x": 2958,
+          "y": 942
+        }
+      },
+      {
+        "tool_id": "tool-1778786545991",
+        "else_edge": {
+          "destination_node_id": "node-1778685990274",
+          "id": "node-1778835754243-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Rescore Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778685990274",
+            "id": "edge-1778835963937-4kbqmdbzr",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Always proceed to confirm the name"
+            }
+          }
+        ],
+        "enable_typing_sound": false,
+        "id": "node-1778835754243",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": 990,
+          "y": 582
+        },
+        "wait_for_result": true
+      },
+      {
+        "tool_id": "tool-1778787407035",
+        "else_edge": {
+          "destination_node_id": "node-1778689073901",
+          "id": "node-1778835833164-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Rescore Name",
+        "edges": [
+          {
+            "destination_node_id": "node-1778689073901",
+            "id": "edge-1778835943190-cyefnma4e",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Always proceed to confirm the name"
+            }
+          }
+        ],
+        "enable_typing_sound": false,
+        "id": "node-1778835833164",
+        "type": "function",
+        "tool_type": "local",
+        "speak_during_execution": false,
+        "display_position": {
+          "x": 2646,
+          "y": 606
+        },
+        "wait_for_result": true
+      }
+    ],
+    "start_node_id": "node-1778682269530",
+    "start_speaker": "agent",
+    "tools": [
+      {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "parameter_type": "json",
+        "method": "POST",
+        "query_params": {},
+        "description": "",
+        "enable_typing_sound": false,
+        "type": "custom",
+        "url": "https://n8n-cnlz.onrender.com/webhook/retell-name-rescoring",
+        "tool_id": "tool-1778786545991",
+        "args_at_root": false,
+        "timeout_ms": 3000,
+        "speak_after_execution": true,
+        "name": "rescore_name",
+        "response_variables": {},
+        "speak_during_execution": false
+      },
+      {
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "parameter_type": "json",
+        "method": "POST",
+        "query_params": {},
+        "description": "",
+        "enable_typing_sound": false,
+        "type": "custom",
+        "url": "https://n8n-cnlz.onrender.com/webhook/retell-name-rescoring",
+        "tool_id": "tool-1778787407035",
+        "args_at_root": false,
+        "timeout_ms": 3000,
+        "speak_after_execution": true,
+        "name": "rescore_name",
+        "response_variables": {},
+        "speak_during_execution": false
+      }
+    ],
+    "model_choice": {
+      "type": "cascading",
+      "model": "gpt-4.1-mini",
+      "high_priority": false
+    },
+    "tool_call_strict_mode": true,
+    "knowledge_base_ids": [],
+    "kb_config": {
+      "top_k": 3,
+      "filter_score": 0.6
+    },
+    "begin_tag_display_position": {
+      "x": 122,
+      "y": 333
+    },
+    "is_published": true,
+    "flex_mode": true,
+    "is_transfer_cf": false
+  }
+}

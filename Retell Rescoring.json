@@ -1,0 +1,219 @@
+{
+  "name": "Retell Rescoring",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell-name-rescoring",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        96
+      ],
+      "id": "204895f2-cccb-4f04-9a33-52c52099035d",
+      "name": "Webhook",
+      "webhookId": "026e4b94-bc00-4382-b206-86a79310b4da"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_MISTRAL_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-small-latest\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a medical clinic name correction AI. A voice system misheard a patient name. Given the misheard ASR text and whether it is a first or last name, return the most likely correct real human name.\\n\\nSpecial rules:\\n- Irish/Gaelic names: O'Brien, O'Connor, O'Sullivan, Murphy, Saoirse, Siobhan\\n- Indian names: Garikapati, Abhinaya, Venkataraman, Krishnamurthy\\n- Hispanic names with hyphens: Garcia-Ramirez, Lopez-Hernandez\\n- Scottish prefixes: McDonald, McCarthy, McAllister\\n- Numbers that sound like names: Fourteen→Patel, Fortin→Fortin, Eighteen→Stein\\n\\nOutput ONLY valid JSON. No markdown. No explanation.\\nFormat: {\\\"corrected_name\\\": \\\"Name\\\", \\\"confidence\\\": \\\"high\\\" or \\\"low\\\"}\\nIf you cannot determine a real name with confidence, return: {\\\"corrected_name\\\": \\\"\\\", \\\"confidence\\\": \\\"low\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"ASR heard: \\\"{{ $json.body.asr_text }}\\\". Name type: {{ $json.body.name_type }}. What is the correct name?\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        96
+      ],
+      "id": "a407028e-290a-4269-b1b9-15c3074543ae",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d4eb4346-3e78-49ed-aee7-cca356ca8267",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        96
+      ],
+      "id": "bdd4c374-43c6-4afe-a009-8b1382fd15aa",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"action\": \"confirm\",\n  \"suggested_name\": \"{{ $json.suggested_name }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        16
+      ],
+      "id": "fbc49db9-ccaf-4525-88a6-273aee546f32",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"action\": \"spell\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        176
+      ],
+      "id": "fa2ec705-646a-418a-8a43-9f9056afc345",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get Mistral's response\nconst mistralOutput = $input.first().json;\nlet content = mistralOutput.choices[0].message.content;\n\n// Remove markdown code blocks if present\ncontent = content.replace(/```json\\n?/g, '');\ncontent = content.replace(/```\\n?/g, '');\ncontent = content.trim();\n\n// Parse the JSON\nlet parsedContent;\ntry {\n  parsedContent = JSON.parse(content);\n} catch (e) {\n  parsedContent = { corrected_name: null, confidence: \"low\" };\n}\n\n// Return the cleaned data for the IF node\nreturn [{\n  json: {\n    corrected_name: parsedContent.corrected_name,\n    confidence: parsedContent.confidence\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        96
+      ],
+      "id": "b08476cd-d969-4aaa-8c3c-e824ce13fd00",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the corrected name from the HTTP Request node\nconst httpResponse = $node[\"HTTP Request\"].json;\nconst content = httpResponse.choices[0].message.content;\n\n// Parse the JSON from Mistral\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (e) {\n  parsed = { corrected_name: null, confidence: \"low\" };\n}\n\n// Return the formatted response for Retell\nreturn [{\n  json: {\n    action: \"confirm\",\n    suggested_name: parsed.corrected_name\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1da24b59-57ca-4e1f-bedf-6b6b5d2d6729",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "557f3dd1-8e40-4f29-a658-88c0781fd3ab",
+  "meta": {
+    "instanceId": "15ea08e457634f26786b4295910e386e1e242ffa868ce10b34eea398d36cd36d"
+  },
+  "id": "wkicnGowY1Nvwbka",
+  "tags": []
+}
